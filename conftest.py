@@ -3,20 +3,25 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def browser(request):
-    browser = request.config.getoption("browser_name")
-    print("\nstart browser for test..")
-    browser = webdriver.Chrome()
-    yield browser
-    print("\nquit browser..")
-    browser.quit()
-    return browser
-
-
-@pytest.fixture
-def language(browser):
+    user_language = request.config.getoption("--language")
     options = Options()
     options.add_experimental_option('prefs', {'intl.accept_languages': user_language})
+    options.add_argument(f'--lang={user_language}')
+    options.add_argument(f'accept-language={user_language}')
+    
     browser = webdriver.Chrome(options=options)
+    yield browser
+    browser.quit()
+
+
+@pytest.fixture
+def user_language(request):
+    return request.config.getoption("--language")
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--language", action="store", default="ru", help="language"
+    )
 
